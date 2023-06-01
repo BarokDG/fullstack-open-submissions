@@ -1,7 +1,8 @@
+```mermaid
 sequenceDiagram
-participant user
-participant browser
-participant server
+    participant user
+    participant browser
+    participant server
 
     user->>browser: Submits note
 
@@ -34,3 +35,4 @@ participant server
     server-->>browser: Notes
     deactivate server
     browser-->>user: Renders notes
+```
