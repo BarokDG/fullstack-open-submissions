@@ -8,16 +8,18 @@ const Content = (props) => {
 
   return (
     <>
-      <p>
-        {part1} {exercises1}
-      </p>
-      <p>
-        {part2} {exercises2}
-      </p>
-      <p>
-        {part3} {exercises3}
-      </p>
+      <Part part={part1} numberOfExercises={exercises1} />
+      <Part part={part2} numberOfExercises={exercises2} />
+      <Part part={part3} numberOfExercises={exercises3} />
     </>
+  );
+};
+
+const Part = (props) => {
+  return (
+    <p>
+      {props.part} {props.numberOfExercises}
+    </p>
   );
 };
 
