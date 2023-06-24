@@ -1,0 +1,17 @@
+.notification {
+  font-size: 20px;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.error {
+  color: darkred;
+  background: #f2d1d1;
+}
+
+.success {
+  color: darkgreen;
+  background: #d1f2d1;
+}

@@ -1,0 +1,8 @@
+const SearchFilter = ({ filter, onChange }) => (
+  <div>
+    filter shown with
+    <input value={filter} onChange={onChange} />
+  </div>
+);
+
+export default SearchFilter;

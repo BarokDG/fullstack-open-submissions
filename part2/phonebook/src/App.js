@@ -1,56 +1,18 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 
 import personService from "./services/persons";
 
-const SearchFilter = ({ filter, onChange }) => (
-  <div>
-    filter shown with
-    <input value={filter} onChange={onChange} />
-  </div>
-);
-
-const AddPersonForm = ({
-  onSubmit,
-  newName,
-  newPhoneNumber,
-  handleNameChange,
-  handlePhoneNumberChange,
-}) => (
-  <>
-    <h2>New</h2>
-    <form onSubmit={onSubmit}>
-      <div>
-        name: <input value={newName} onChange={handleNameChange} />
-      </div>
-      <div>
-        phone number:{" "}
-        <input value={newPhoneNumber} onChange={handlePhoneNumberChange} />
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  </>
-);
-
-const PersonsList = ({ persons, onDeletePerson }) => (
-  <>
-    <h2>Numbers</h2>
-    {persons.map(({ id, name, number }) => (
-      <div key={name}>
-        {name} {number}
-        <button onClick={() => onDeletePerson(id, name)}>delete</button>
-      </div>
-    ))}
-  </>
-);
+import AddPersonForm from "./components/AddPersonForm";
+import PersonsList from "./components/PersonsList";
+import SearchFilter from "./components/SearchFilter";
+import Notification from "./components/Notification";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [notificationState, setNotificationState] = useState(null);
 
   useEffect(() => {
     personService
@@ -88,6 +50,15 @@ const App = () => {
       setPersons(persons.concat(returnedPerson));
       setNewName("");
       setNewPhoneNumber("");
+
+      setNotificationState({
+        message: `${returnedPerson.name} added to contacts!`,
+        type: "success",
+      });
+
+      setTimeout(() => {
+        setNotificationState(null);
+      }, 3000);
     });
   };
 
@@ -100,6 +71,24 @@ const App = () => {
         );
 
         setPersons(nextPersons);
+
+        setNotificationState({
+          message: `${returnedPerson.name} contact details updated!`,
+          type: "success",
+        });
+
+        return returnedPerson;
+      })
+      .catch((err) => {
+        setNotificationState({
+          message: `${updatedPersonObject.name} has already been removed from server`,
+          type: "error",
+        });
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setNotificationState(null);
+        }, 3000);
       });
   };
 
@@ -135,6 +124,7 @@ const App = () => {
     <div>
       <h1>Phonebook</h1>
 
+      <Notification notificationState={notificationState} />
       <SearchFilter filter={filter} onChange={handleFilterChange} />
       <AddPersonForm
         onSubmit={addContact}
