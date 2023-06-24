@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+import personService from "./services/persons";
+
 const SearchFilter = ({ filter, onChange }) => (
   <div>
     filter shown with
@@ -32,12 +34,13 @@ const AddPersonForm = ({
   </>
 );
 
-const PersonsList = ({ persons }) => (
+const PersonsList = ({ persons, onDeletePerson }) => (
   <>
     <h2>Numbers</h2>
-    {persons.map(({ name, number }) => (
+    {persons.map(({ id, name, number }) => (
       <div key={name}>
         {name} {number}
+        <button onClick={() => onDeletePerson(id, name)}>delete</button>
       </div>
     ))}
   </>
@@ -50,27 +53,54 @@ const App = () => {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
-      .then((response) => setPersons(response.data));
+    personService
+      .getAllPersons()
+      .then((initialPersons) => setPersons(initialPersons));
   }, []);
 
   const addContact = (event) => {
     event.preventDefault();
-
-    if (persons.find(({ name }) => name === newName)) {
-      alert(`${newName} is already added to phonebook`);
-      return;
-    }
 
     const newPersonObject = {
       name: newName,
       number: newPhoneNumber,
     };
 
-    setPersons(persons.concat(newPersonObject));
-    setNewName("");
-    setNewPhoneNumber("");
+    const existingPerson = persons.find(({ name }) => name === newName);
+
+    if (existingPerson) {
+      if (existingPerson.number) {
+        const confirmation = window.confirm(
+          `${existingPerson.name} is already added to phonebook, replace the old number with a new one?`
+        );
+
+        if (!confirmation) return;
+      }
+
+      updateContact(existingPerson.id, newPersonObject).then(() => {
+        setNewName("");
+        setNewPhoneNumber("");
+      });
+      return;
+    }
+
+    personService.createPerson(newPersonObject).then((returnedPerson) => {
+      setPersons(persons.concat(returnedPerson));
+      setNewName("");
+      setNewPhoneNumber("");
+    });
+  };
+
+  const updateContact = (id, updatedPersonObject) => {
+    return personService
+      .updatePerson(id, updatedPersonObject)
+      .then((returnedPerson) => {
+        const nextPersons = persons.map((person) =>
+          person.id === returnedPerson.id ? returnedPerson : person
+        );
+
+        setPersons(nextPersons);
+      });
   };
 
   const handleNameChange = (event) => {
@@ -83,6 +113,18 @@ const App = () => {
 
   const handleFilterChange = (event) => {
     setFilter(event.target.value);
+  };
+
+  const handleDeletePerson = (id, name) => {
+    const confirmation = window.confirm(
+      `Are you sure you want to delete ${name}?`
+    );
+
+    if (!confirmation) return;
+
+    personService
+      .deletePerson(id)
+      .then(() => setPersons(persons.filter((person) => person.id !== id)));
   };
 
   const personsToShow = persons.filter(({ name }) =>
@@ -101,7 +143,10 @@ const App = () => {
         handleNameChange={handleNameChange}
         handlePhoneNumberChange={handlePhoneNumberChange}
       />
-      <PersonsList persons={personsToShow} />
+      <PersonsList
+        persons={personsToShow}
+        onDeletePerson={handleDeletePerson}
+      />
     </div>
   );
 };
