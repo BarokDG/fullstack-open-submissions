@@ -3,11 +3,23 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const CountryDetails = ({ country }) => {
+  const [capitalWeatherData, setCapitalWeatherData] = useState(null);
+
   const name = country.name.common;
-  const capitals = country.capital;
+  const capitals = country?.capital;
   const area = country.area;
   const languages = country.languages;
   const { png, alt } = country.flags;
+
+  useEffect(() => {
+    axios
+      .get(
+        `https://api.openweathermap.org/data/2.5/weather?q=${capitals[0]}&units=metric&appid=${process.env.REACT_APP_API_KEY}`
+      )
+      .then((response) => {
+        setCapitalWeatherData(response.data);
+      });
+  }, [capitals]);
 
   return (
     <>
@@ -21,11 +33,24 @@ const CountryDetails = ({ country }) => {
         ))}
       </ul>
       <img src={png} alt={alt} />
+      <h2>Weather in {capitals[0]}</h2>
+      {capitalWeatherData ? (
+        <>
+          <p>temperature {capitalWeatherData.main.temp} Celsius</p>
+          <img
+            src={`https://openweathermap.org/img/wn/${capitalWeatherData.weather[0].icon}@2x.png`}
+            alt={capitalWeatherData.weather[0].description}
+          />
+          <p>wind {capitalWeatherData.wind.speed} m/s</p>
+        </>
+      ) : (
+        <p>Loading capital weather data</p>
+      )}
     </>
   );
 };
 
-const CountriesList = ({ countries, query }) => {
+const CountriesList = ({ query, countries, onCountrySelect }) => {
   if (!query) {
     return null;
   }
@@ -43,16 +68,26 @@ const CountriesList = ({ countries, query }) => {
   }
 
   return countriesToShow.map((country) => (
-    <p key={country.name.common}>{country.name.common}</p>
+    <p key={country.name.common}>
+      {country.name.common}
+      <button onClick={() => onCountrySelect(country)}>show</button>
+    </p>
   ));
 };
 
 function App() {
   const [query, setQuery] = useState("");
   const [countries, setCountries] = useState([]);
+  const [selectedCountry, setSelectedCountry] = useState(null);
 
   const handleQueryChange = (e) => {
     setQuery(e.target.value);
+    setSelectedCountry(null);
+  };
+
+  const handleCountrySelect = (country) => {
+    setQuery(country.name.common);
+    setSelectedCountry(country);
   };
 
   useEffect(() => {
@@ -69,7 +104,16 @@ function App() {
         <label>find countries</label>
         <input type="text" value={query} onChange={handleQueryChange} />
       </div>
-      <CountriesList countries={countries} query={query} />
+
+      {selectedCountry ? (
+        <CountryDetails country={selectedCountry} />
+      ) : (
+        <CountriesList
+          query={query}
+          countries={countries}
+          onCountrySelect={handleCountrySelect}
+        />
+      )}
     </>
   );
 }
