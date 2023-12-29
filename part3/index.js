@@ -66,11 +66,11 @@ app.post("/api/persons", (request, response) => {
     });
   }
 
-  const oldPersonWithSameNameAsNewPerson = persons.find(
+  const existingPersonWithSameNameAsNewPerson = persons.find(
     (person) => person.name === newPerson.name
   );
 
-  if (oldPersonWithSameNameAsNewPerson) {
+  if (existingPersonWithSameNameAsNewPerson) {
     return response.status(400).json({
       error: "name must be unique",
     });
